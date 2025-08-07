@@ -3,11 +3,15 @@ name: Deploy Multiple APIs to Azure App Services
 on:
   push:
     branches: [ "main" ]
+    paths:
+     - src/**
+     - .github/**
   pull_request:
     branches: [ "main" ]
 
 env:
   DOTNET_VERSION: '8.0.x'
+  SOURCE_DIR: ./src
 
 jobs:
   build:
@@ -23,21 +27,24 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+        src-dir: ${{ env.SOURCE_DIR }}
 
     - name: Restore dependencies
+      working-directory: ${{ env.SOURCE_DIR }}
       run: dotnet restore
 
     - name: Build solution
+      working-directory: ${{ env.SOURCE_DIR }}
       run: dotnet build --configuration Release --no-restore
 
     - name: Publish Api1
-      id: publish-api1
+      id: publish-creditcard
       run: |
         dotnet publish src/CreditCard/CreditCard.csproj -c Release -o ${{ github.workspace }}/publish/creditcard
         echo "artifact-path=${{ github.workspace }}/publish/creditcard" >> $GITHUB_OUTPUT
 
     - name: Upload CreditCard artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: creditcard-artifact
         path: ${{ github.workspace }}/publish/creditcard
@@ -49,18 +56,18 @@ jobs:
         echo "artifact-path=${{ github.workspace }}/publish/creditbureau" >> $GITHUB_OUTPUT
 
     - name: Upload CreditBureau artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: creditbureau-artifact
         path: ${{ github.workspace }}/publish/creditbureau
 
-  deploy-creditbureau:
+  deploy-creditcard:
     needs: build
     runs-on: ubuntu-latest
     
     steps:
     - name: Download CreditCard artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: creditcard-artifact
         path: ${{ github.workspace }}/publish/creditcard
@@ -69,7 +76,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ secrets.AZURE_WEBAPP_NAME_API1 }}
-        publish-profile: ${{ format('{{0}} ${{1}} ${{2}}', secrets.AZURE_PUBLISH_URL_API1, secrets.AZURE_PUBLISH_USERNAME_API1, secrets.AZURE_PUBLISH_PASSWORD_API1) }}
+        publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_API1 }}
         package: ${{ github.workspace }}/publish/creditcard
 
   deploy-creditbureau:
@@ -78,7 +85,7 @@ jobs:
     
     steps:
     - name: Download creditbureau artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: creditbureau-artifact
         path: ${{ github.workspace }}/publish/creditbureau
@@ -87,5 +94,5 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ secrets.AZURE_WEBAPP_NAME_API2 }}
-        publish-profile: ${{ format('{{0}} ${{1}} ${{2}}', secrets.AZURE_PUBLISH_URL_API2, secrets.AZURE_PUBLISH_USERNAME_API2, secrets.AZURE_PUBLISH_PASSWORD_API2) }}
+        publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_API2 }}
         package: ${{ github.workspace }}/publish/creditbureau

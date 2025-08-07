@@ -1,4 +1,4 @@
-@CreditBureau_HostAddress = http://localhost:5043
+@CreditBureau_HostAddress = https://localhost:7189
 
 GET {{CreditBureau_HostAddress}}/weatherforecast/
 Accept: application/json

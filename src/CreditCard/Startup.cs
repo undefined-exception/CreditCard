@@ -1,5 +1,7 @@
 ﻿using CreditCard.Data;
+using CreditCard.Extensions;
 using CreditCard.Models;
+using CreditCard.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -20,7 +22,8 @@ namespace CreditCard
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var connectionString = Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+            var connectionString = Configuration.GetValue<string>("SQLConnectionString");
+
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
             services.AddDatabaseDeveloperPageExceptionFilter();
@@ -29,6 +32,14 @@ namespace CreditCard
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
 
+            services.AddApplicationInsightsTelemetry();
+
+            services.AddScoped<IApplicationService, ApplicationService>();
+            services.AddHostedService<ApplicationStatusUpdateService>();
+            services.AddScoped<IApplicationNotificationService, ApplicationNotificationService>();
+
+            var configsection = Configuration.GetSection(nameof(CreditBureauApiConfig));
+            services.AddHttpClientWithPolicies<IApplicationApiService, ApplicationApiService, CreditBureauApiConfig>(configsection);
         }
 
         public void Configure(
@@ -59,7 +70,7 @@ namespace CreditCard
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Application}/{action=List}/{id?}");
 
                 endpoints.MapRazorPages();
             });

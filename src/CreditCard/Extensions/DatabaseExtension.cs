@@ -1,5 +1,8 @@
 ﻿using CreditCard.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Abstractions;
+using System.Threading.RateLimiting;
 
 namespace CreditCard.Extensions
 {
@@ -27,4 +30,5 @@ namespace CreditCard.Extensions
             return host;
         }
     }
+
 }

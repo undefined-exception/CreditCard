@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using CreditCard.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CreditCard.Data
@@ -9,5 +10,7 @@ namespace CreditCard.Data
             : base(options)
         {
         }
+
+        public DbSet<ApplicationModel> Applications { get; set; }
     }
 }

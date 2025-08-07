@@ -20,7 +20,13 @@ namespace CreditBureau
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+
+                    // Force HTTPS for the Swagger UI
+                    c.ConfigObject.AdditionalItems["schemes"] = new[] { "https", "http" };
+                });
             }
 
             app.UseHttpsRedirection();

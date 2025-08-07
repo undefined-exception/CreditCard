@@ -61,6 +61,8 @@ resource "azurerm_key_vault" "kv" {
   sku_name                    = "standard"
 }
 
+data "azurerm_client_config" "current" {}
+
 # Key Vault access policy for current user
 resource "azurerm_key_vault_access_policy" "current_user" {
   key_vault_id = azurerm_key_vault.kv.id
@@ -102,6 +104,7 @@ resource "azurerm_windows_web_app" "webapp" {
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.api.instrumentation_key
     "SQLConnectionString"            = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.sql_connection_string.id})"
+    "CreditBureauApiConfig__BaseEndpoint"                   = "https://${azurerm_windows_web_app.cred_serv1.default_hostname}"
   }
 }
 
