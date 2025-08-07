@@ -1,0 +1,91 @@
+name: Deploy Multiple APIs to Azure App Services
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      api1-path: ${{ steps.publish-api1.outputs.artifact-path }}
+      api2-path: ${{ steps.publish-api2.outputs.artifact-path }}
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build solution
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Publish Api1
+      id: publish-api1
+      run: |
+        dotnet publish src/Api1/Api1.csproj -c Release -o ${{ github.workspace }}/publish/api1
+        echo "artifact-path=${{ github.workspace }}/publish/api1" >> $GITHUB_OUTPUT
+
+    - name: Upload Api1 artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: api1-artifact
+        path: ${{ github.workspace }}/publish/api1
+
+    - name: Publish Api2
+      id: publish-api2
+      run: |
+        dotnet publish src/Api2/Api2.csproj -c Release -o ${{ github.workspace }}/publish/api2
+        echo "artifact-path=${{ github.workspace }}/publish/api2" >> $GITHUB_OUTPUT
+
+    - name: Upload Api2 artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: api2-artifact
+        path: ${{ github.workspace }}/publish/api2
+
+  deploy-api1:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download Api1 artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: api1-artifact
+        path: ${{ github.workspace }}/publish/api1
+
+    - name: Deploy Api1 to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ secrets.AZURE_WEBAPP_NAME_API1 }}
+        publish-profile: ${{ format('{{0}} ${{1}} ${{2}}', secrets.AZURE_PUBLISH_URL_API1, secrets.AZURE_PUBLISH_USERNAME_API1, secrets.AZURE_PUBLISH_PASSWORD_API1) }}
+        package: ${{ github.workspace }}/publish/api1
+
+  deploy-api2:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download Api2 artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: api2-artifact
+        path: ${{ github.workspace }}/publish/api2
+
+    - name: Deploy Api2 to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ secrets.AZURE_WEBAPP_NAME_API2 }}
+        publish-profile: ${{ format('{{0}} ${{1}} ${{2}}', secrets.AZURE_PUBLISH_URL_API2, secrets.AZURE_PUBLISH_USERNAME_API2, secrets.AZURE_PUBLISH_PASSWORD_API2) }}
+        package: ${{ github.workspace }}/publish/api2
