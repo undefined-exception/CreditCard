@@ -84,6 +84,10 @@ The main Terraform configuration appends a random suffix (like b9) to service na
 
 This ensures your deployment URLs are globally unique (e.g., app-eastus2-win-sbx-b9.azurewebsites.net)
 
+## Resources
+<img width="1255" height="777" alt="Screenshot 2025-08-09 132436" src="https://github.com/user-attachments/assets/eb60f407-be0e-4d23-9c83-46464477f0cc" />
+<img width="1497" height="882" alt="Screenshot 2025-08-09 132416" src="https://github.com/user-attachments/assets/cd48876a-b01d-46d4-967c-10fd4f5239e9" />
+
 ## Support
 
 This repository is provided "as-is" for learning purposes. For issues or questions, please contact the author: Lőrinc Sándor.
